@@ -3,13 +3,11 @@ using System.Collections.Generic;
 
 namespace CyberGuard
 {
-    // Handles all chatbot logic: keyword recognition, random responses,
-    // conversation flow, memory/recall, sentiment detection, error handling
     internal class Chatbot
     {
         private string _userName;
         private string _lastTopic = "";
-        private string _favouriteTopic = "";   // Memory: user's stated interest
+        private string _favouriteTopic = "";
         private readonly Random _random = new Random();
 
         // ── Random response pools (Requirement 3) ──────────────────────────
@@ -45,17 +43,18 @@ namespace CyberGuard
             "Report suspected scams to your bank and local cybercrime authorities immediately."
         };
 
-        // ── Sentiment keywords (Requirement 6) ────────────────────────────
-        private readonly Dictionary<string, string> _sentimentPrefixes = new Dictionary<string, string>
+        // ── Sentiment detection map (Requirement 6) ───────────────────────
+        private readonly Dictionary<string, string> _sentimentPrefixes =
+            new Dictionary<string, string>
         {
-            { "worried",     "It is completely understandable to feel worried. Cybersecurity can feel overwhelming, but you are already taking the right steps by learning about it. " },
-            { "scared",      "Do not be scared — awareness is your best defence. Let me share something helpful. " },
-            { "anxious",     "I understand the anxiety around cyber threats. You are doing the right thing by staying informed. " },
-            { "confused",    "No worries at all — this can be confusing at first. Let me explain it clearly. " },
-            { "frustrated",  "I hear you — it can be frustrating dealing with all these threats. Let me help make it simpler. " },
-            { "curious",     "Great to see your curiosity! Asking questions is the first step to staying safe online. " },
-            { "unsure",      "It is okay to be unsure. That is exactly what I am here for. " },
-            { "overwhelmed", "Take a breath — you do not have to learn everything at once. Let me break it down for you. " }
+            { "worried",     "It is completely understandable to feel worried. Cybersecurity can feel overwhelming, but you are already taking the right steps by learning about it.\n\n" },
+            { "scared",      "Do not be scared — awareness is your best defence. Let me share something helpful.\n\n" },
+            { "anxious",     "I understand the anxiety around cyber threats. You are doing the right thing by staying informed.\n\n" },
+            { "confused",    "No worries at all — this can be confusing at first. Let me explain it clearly.\n\n" },
+            { "frustrated",  "I hear you — it can be frustrating dealing with all these threats. Let me help make it simpler.\n\n" },
+            { "curious",     "Great to see your curiosity! Asking questions is the first step to staying safe online.\n\n" },
+            { "unsure",      "It is okay to be unsure — that is exactly what I am here for.\n\n" },
+            { "overwhelmed", "Take a breath — you do not have to learn everything at once. Let me break it down for you.\n\n" }
         };
 
         public Chatbot(string userName)
@@ -63,7 +62,6 @@ namespace CyberGuard
             _userName = userName;
         }
 
-        // Returns the opening welcome message + menu
         public string GetWelcome()
         {
             return $"Hello {_userName}! Welcome to CyberGuard.\n" +
@@ -71,7 +69,6 @@ namespace CyberGuard
                    GetMenu();
         }
 
-        // Main entry point — processes any user input
         public string Respond(string input)
         {
             if (string.IsNullOrWhiteSpace(input))
@@ -79,215 +76,224 @@ namespace CyberGuard
 
             string lower = input.Trim().ToLower();
 
-            // ── Exit ───────────────────────────────────────────────────────
             if (lower == "exit" || lower == "bye")
                 return $"Goodbye {_userName}! Stay safe online. You can close the window now.";
 
-            // ── Sentiment detection (Requirement 6) — check FIRST ──────────
-            string sentimentPrefix = DetectSentiment(lower);
+            // Sentiment detection (Requirement 6)
+            string sentiment = DetectSentiment(lower);
 
-            // ── Conversation flow: follow-up phrases (Requirement 4) ───────
+            // Follow-up conversation flow (Requirement 4)
             if (lower.Contains("more") || lower.Contains("another tip") ||
                 lower.Contains("tell me more") || lower.Contains("explain more") ||
                 lower.Contains("give me more"))
-            {
-                return sentimentPrefix + GiveMoreDetails();
-            }
+                return sentiment + GiveMoreDetails();
 
-            // ── Menu number shortcuts ──────────────────────────────────────
+            // Menu number shortcuts
             switch (lower)
             {
-                case "1": return sentimentPrefix + PasswordInfo();
-                case "2": return sentimentPrefix + PhishingInfo();
-                case "3": return sentimentPrefix + SafeBrowsing();
-                case "4": return sentimentPrefix + MalwareInfo();
-                case "5": return sentimentPrefix + TwoFactorAuth();
-                case "6": return sentimentPrefix + SocialEngineering();
-                case "7": return sentimentPrefix + PublicWifi();
+                case "1": return sentiment + PasswordInfo();
+                case "2": return sentiment + PhishingInfo();
+                case "3": return sentiment + SafeBrowsing();
+                case "4": return sentiment + MalwareInfo();
+                case "5": return sentiment + TwoFactorAuth();
+                case "6": return sentiment + SocialEngineering();
+                case "7": return sentiment + PublicWifi();
                 case "8": return GetMenu();
             }
 
-            // ── Memory: user states a favourite topic (Requirement 5) ──────
+            // Memory: user states a favourite topic (Requirement 5)
             if (lower.Contains("i am interested in") || lower.Contains("i'm interested in") ||
                 lower.Contains("i like") || lower.Contains("my favourite topic is") ||
                 lower.Contains("i want to learn about"))
-            {
-                return HandleFavouriteTopic(lower, sentimentPrefix);
-            }
+                return HandleFavouriteTopic(lower, sentiment);
 
-            // ── Keyword recognition (Requirement 2) ───────────────────────
+            // Keyword recognition (Requirement 2)
             if (lower.Contains("password") || lower.Contains("passwords"))
-                return sentimentPrefix + PasswordInfo();
+                return sentiment + PasswordInfo();
             if (lower.Contains("phish"))
-                return sentimentPrefix + PhishingInfo();
-            if (lower.Contains("browsing") || lower.Contains("browser") || lower.Contains("https") || lower.Contains("website"))
-                return sentimentPrefix + SafeBrowsing();
+                return sentiment + PhishingInfo();
+            if (lower.Contains("browsing") || lower.Contains("browser") ||
+                lower.Contains("https") || lower.Contains("website"))
+                return sentiment + SafeBrowsing();
             if (lower.Contains("malware") || lower.Contains("virus") || lower.Contains("ransomware"))
-                return sentimentPrefix + MalwareInfo();
-            if (lower.Contains("2fa") || lower.Contains("two factor") || lower.Contains("two-factor") || lower.Contains("authenticat"))
-                return sentimentPrefix + TwoFactorAuth();
+                return sentiment + MalwareInfo();
+            if (lower.Contains("2fa") || lower.Contains("two factor") ||
+                lower.Contains("two-factor") || lower.Contains("authenticat"))
+                return sentiment + TwoFactorAuth();
             if (lower.Contains("social engineer") || lower.Contains("bait") || lower.Contains("pretend"))
-                return sentimentPrefix + SocialEngineering();
-            if (lower.Contains("wifi") || lower.Contains("wi-fi") || lower.Contains("public network") || lower.Contains("hotspot"))
-                return sentimentPrefix + PublicWifi();
+                return sentiment + SocialEngineering();
+            if (lower.Contains("wifi") || lower.Contains("wi-fi") ||
+                lower.Contains("hotspot") || lower.Contains("public network"))
+                return sentiment + PublicWifi();
             if (lower.Contains("privacy") || lower.Contains("private"))
-                return sentimentPrefix + PrivacyInfo();
+                return sentiment + PrivacyInfo();
             if (lower.Contains("scam") || lower.Contains("fraud"))
-                return sentimentPrefix + ScamInfo();
+                return sentiment + ScamInfo();
 
-            // ── Conversational replies ─────────────────────────────────────
+            // Conversational replies
             if (lower.Contains("how are you"))
                 return $"I am doing great and ready to help you, {_userName}! {RecallFavourite()}Type 8 to see the menu.";
-            if (lower.Contains("purpose") || lower.Contains("what do you do") || lower.Contains("what can you do"))
-                return "I am here to educate you on cybersecurity topics. Type 8 to see the full menu of topics I can help with.";
+            if (lower.Contains("purpose") || lower.Contains("what do you do") ||
+                lower.Contains("what can you do"))
+                return "I am here to educate you on cybersecurity topics. Type 8 to see the full menu.";
             if (lower.Contains("thank"))
                 return $"You are welcome, {_userName}! Stay cyber safe! {RecallFavourite()}";
             if (lower.Contains("hello") || lower.Contains("hi") || lower.Contains("hey"))
-                return $"Hey {_userName}! Good to hear from you. {RecallFavourite()}Type 8 to see what I can help with.";
+                return $"Hey {_userName}! {RecallFavourite()}Type 8 to see what I can help with.";
             if (lower.Contains("menu") || lower.Contains("help") || lower.Contains("topics"))
                 return GetMenu();
 
-            // ── Error: unrecognised input (Requirement 7) ──────────────────
-            return $"[ERROR] I did not understand that, {_userName}. Try keywords like: password, phishing, malware, scam, privacy, wifi, 2fa — or type 8 for the menu.";
+            // Error: unrecognised input (Requirement 7)
+            return $"[ERROR] I did not understand that, {_userName}. " +
+                   "Try: password, phishing, malware, scam, privacy, wifi, 2fa — or type 8 for the menu.";
         }
 
-        // ── Topic response methods ─────────────────────────────────────────
+        // ── Topic methods ──────────────────────────────────────────────────
 
         private string PasswordInfo()
         {
             _lastTopic = "password";
             string tip = _passwordResponses[_random.Next(_passwordResponses.Count)];
-            return $"PASSWORD SAFETY:\n{tip}\n\nType 'more' for extra password tips.";
+            return "// PASSWORD SAFETY\n" +
+                   tip + "\n\n" +
+                   "- Use at least 12 characters with letters, numbers and symbols.\n" +
+                   "- Never reuse the same password on different accounts.\n" +
+                   "- Use a password manager to keep your passwords safe.\n\n" +
+                   "[ type 'more' for extra tips ]";
         }
 
         private string PhishingInfo()
         {
             _lastTopic = "phishing";
             string tip = _phishingResponses[_random.Next(_phishingResponses.Count)];
-            return $"PHISHING:\n{tip}\n\nType 'more' for extra phishing tips.";
+            return "// PHISHING\n" +
+                   tip + "\n\n" +
+                   "- Always check the sender email before clicking any links.\n" +
+                   "- When in doubt, go directly to the website yourself.\n\n" +
+                   "[ type 'more' for extra tips ]";
         }
 
         private string SafeBrowsing()
         {
             _lastTopic = "browsing";
-            return "SAFE BROWSING:\n" +
+            return "// SAFE BROWSING\n" +
                    "- Only visit websites that use HTTPS.\n" +
                    "- Never download files from unknown websites.\n" +
                    "- Keep your browser updated at all times.\n\n" +
-                   "Type 'more' for extra browsing tips.";
+                   "[ type 'more' for extra tips ]";
         }
 
         private string MalwareInfo()
         {
             _lastTopic = "malware";
-            return "MALWARE:\n" +
+            return "// MALWARE\n" +
                    "- Malware is harmful software that damages your device.\n" +
                    "- Install a good antivirus and keep it updated.\n" +
                    "- Never open email attachments from unknown senders.\n\n" +
-                   "Type 'more' for extra malware tips.";
+                   "[ type 'more' for extra tips ]";
         }
 
         private string TwoFactorAuth()
         {
             _lastTopic = "2fa";
-            return "TWO-FACTOR AUTHENTICATION (2FA):\n" +
+            return "// TWO-FACTOR AUTHENTICATION (2FA)\n" +
                    "- 2FA adds a second layer of protection beyond your password.\n" +
                    "- Enable it on your email, banking and social media accounts.\n" +
                    "- Never share your 2FA code with anyone.\n\n" +
-                   "Type 'more' for extra 2FA tips.";
+                   "[ type 'more' for extra tips ]";
         }
 
         private string SocialEngineering()
         {
             _lastTopic = "social";
-            return "SOCIAL ENGINEERING:\n" +
+            return "// SOCIAL ENGINEERING\n" +
                    "- Attackers pretend to be trusted people to steal your info.\n" +
                    "- Always verify who you are talking to before sharing anything.\n" +
                    "- Never give passwords over the phone or via email.\n\n" +
-                   "Type 'more' for extra tips.";
+                   "[ type 'more' for extra tips ]";
         }
 
         private string PublicWifi()
         {
             _lastTopic = "wifi";
-            return "PUBLIC WI-FI SAFETY:\n" +
+            return "// PUBLIC WI-FI SAFETY\n" +
                    "- Public Wi-Fi is risky as others can intercept your data.\n" +
                    "- Avoid accessing banking or email on public networks.\n" +
                    "- Use a VPN to keep your connection private.\n\n" +
-                   "Type 'more' for extra tips.";
+                   "[ type 'more' for extra tips ]";
         }
 
         private string PrivacyInfo()
         {
             _lastTopic = "privacy";
             string tip = _privacyResponses[_random.Next(_privacyResponses.Count)];
-            return $"PRIVACY:\n{tip}\n\nType 'more' for extra privacy tips.";
+            return "// PRIVACY\n" + tip + "\n\n[ type 'more' for extra tips ]";
         }
 
         private string ScamInfo()
         {
             _lastTopic = "scam";
             string tip = _scamResponses[_random.Next(_scamResponses.Count)];
-            return $"SCAM AWARENESS:\n{tip}\n\nType 'more' for extra scam tips.";
+            return "// SCAM AWARENESS\n" + tip + "\n\n[ type 'more' for extra tips ]";
         }
 
-        // ── More details: conversation flow (Requirement 4) ───────────────
+        // ── More details (Requirement 4) ───────────────────────────────────
         private string GiveMoreDetails()
         {
             switch (_lastTopic)
             {
                 case "password":
-                    return "MORE ON PASSWORDS:\n" +
+                    return "// MORE ON PASSWORDS\n" +
                            "- Use a passphrase: four random words joined together.\n" +
                            "- Check haveibeenpwned.com to see if your password was leaked.\n" +
-                           "- A password manager can generate and store strong passwords for you.";
+                           "- A password manager generates and stores strong passwords for you.";
                 case "phishing":
-                    return "MORE ON PHISHING:\n" +
+                    return "// MORE ON PHISHING\n" +
                            "- Vishing is phishing done over phone calls.\n" +
                            "- Smishing is phishing done through SMS messages.\n" +
                            "- Always check the full email address, not just the display name.";
                 case "browsing":
-                    return "MORE ON SAFE BROWSING:\n" +
+                    return "// MORE ON SAFE BROWSING\n" +
                            "- Use a privacy browser like Firefox or Brave.\n" +
                            "- Use VirusTotal to check if a website is safe.\n" +
-                           "- Browser extensions like uBlock Origin block malicious ads.";
+                           "- Extensions like uBlock Origin block malicious ads.";
                 case "malware":
-                    return "MORE ON MALWARE:\n" +
+                    return "// MORE ON MALWARE\n" +
                            "- Ransomware locks your files and demands payment to unlock them.\n" +
                            "- Always back up your files to an external drive or cloud.\n" +
                            "- Avoid pirated software — it is a common malware delivery method.";
                 case "2fa":
-                    return "MORE ON 2FA:\n" +
-                           "- Authenticator apps like Google Authenticator are safer than SMS codes.\n" +
+                    return "// MORE ON 2FA\n" +
+                           "- Authenticator apps are safer than SMS-based 2FA codes.\n" +
                            "- Store your backup codes somewhere safe and offline.\n" +
-                           "- Hardware keys (e.g. YubiKey) are the strongest form of 2FA.";
+                           "- Hardware keys like YubiKey are the strongest form of 2FA.";
                 case "social":
-                    return "MORE ON SOCIAL ENGINEERING:\n" +
+                    return "// MORE ON SOCIAL ENGINEERING\n" +
                            "- Baiting leaves infected USB drives in public places.\n" +
                            "- Always challenge unknown visitors in your workplace.\n" +
                            "- Tailgating is when attackers follow staff through secure doors.";
                 case "wifi":
-                    return "MORE ON PUBLIC WI-FI:\n" +
+                    return "// MORE ON PUBLIC WI-FI\n" +
                            "- Fake hotspots can steal your data without you knowing.\n" +
                            "- Use mobile data instead of public Wi-Fi when possible.\n" +
-                           "- Disable auto-connect to Wi-Fi networks in your phone settings.";
+                           "- Disable auto-connect to Wi-Fi networks in your settings.";
                 case "privacy":
-                    return "MORE ON PRIVACY:\n" +
+                    return "// MORE ON PRIVACY\n" +
                            "- Use private/incognito browsing for sensitive searches.\n" +
                            "- Delete old accounts you no longer use.\n" +
-                           "- Consider a separate email address for online sign-ups.";
+                           "- Use a separate email address for online sign-ups.";
                 case "scam":
-                    return "MORE ON SCAMS:\n" +
+                    return "// MORE ON SCAMS\n" +
                            "- Romance scams are rising — never send money to someone you met online.\n" +
                            "- Employment scams promise high pay for little work. Verify the company.\n" +
-                           "- When in doubt, hang up and call the organisation back on their official number.";
+                           "- Hang up and call the organisation back on their official number.";
                 default:
                     return "[ERROR] Please select a topic first, then type 'more' for extra details.";
             }
         }
 
-        // ── Memory: favourite topic (Requirement 5) ────────────────────────
-        private string HandleFavouriteTopic(string lower, string sentimentPrefix)
+        // ── Memory (Requirement 5) ─────────────────────────────────────────
+        private string HandleFavouriteTopic(string lower, string sentiment)
         {
             string topic = "";
             if (lower.Contains("password")) topic = "password safety";
@@ -303,19 +309,16 @@ namespace CyberGuard
             if (!string.IsNullOrEmpty(topic))
             {
                 _favouriteTopic = topic;
-                return sentimentPrefix +
-                       $"Great! I will remember that you are interested in {topic}, {_userName}. " +
+                return sentiment +
+                       $"Noted! I will remember that you are interested in {topic}, {_userName}.\n" +
                        $"It is a crucial part of staying safe online.\n\n" +
-                       $"Here is something useful about {topic} for you:\n" +
                        GetTopicByName(topic);
             }
 
-            return sentimentPrefix +
-                   $"That is great that you are keen to learn, {_userName}! " +
-                   "Type 8 to see all the topics I can help you with.";
+            return sentiment +
+                   $"Great mindset, {_userName}! Type 8 to see all the topics I can help with.";
         }
 
-        // Maps topic name back to a response method
         private string GetTopicByName(string topic)
         {
             if (topic.Contains("password")) return PasswordInfo();
@@ -323,45 +326,41 @@ namespace CyberGuard
             if (topic.Contains("privacy")) return PrivacyInfo();
             if (topic.Contains("malware")) return MalwareInfo();
             if (topic.Contains("scam")) return ScamInfo();
-            if (topic.Contains("wi-fi") || topic.Contains("wifi")) return PublicWifi();
-            if (topic.Contains("two-factor") || topic.Contains("2fa")) return TwoFactorAuth();
+            if (topic.Contains("wi-fi")) return PublicWifi();
+            if (topic.Contains("two-factor")) return TwoFactorAuth();
             if (topic.Contains("browsing")) return SafeBrowsing();
             if (topic.Contains("social")) return SocialEngineering();
             return "";
         }
 
-        // Returns a recall sentence if a favourite topic is stored
         private string RecallFavourite()
         {
             if (!string.IsNullOrEmpty(_favouriteTopic))
-                return $"As someone interested in {_favouriteTopic}, you might want to review your latest settings. ";
+                return $"As someone interested in {_favouriteTopic}, you might want to review your settings. ";
             return "";
         }
 
-        // Checks for sentiment words and returns an empathetic prefix
         private string DetectSentiment(string lower)
         {
             foreach (var kvp in _sentimentPrefixes)
-            {
-                if (lower.Contains(kvp.Key))
-                    return kvp.Value;
-            }
+                if (lower.Contains(kvp.Key)) return kvp.Value;
             return "";
         }
 
-        // Returns the numbered topic menu
         private string GetMenu()
         {
-            return "CYBERGUARD MENU:\n" +
-                   "  1. Password Safety\n" +
-                   "  2. Phishing Awareness\n" +
-                   "  3. Safe Browsing\n" +
-                   "  4. Malware Protection\n" +
-                   "  5. Two-Factor Authentication\n" +
-                   "  6. Social Engineering\n" +
-                   "  7. Public Wi-Fi Safety\n" +
-                   "  8. Show menu again\n\n" +
-                   "Type a number or a keyword (e.g. 'password', 'scam', 'privacy').\n" +
+            return "CYBERGUARD MENU\n" +
+                   "────────────────────────────────\n" +
+                   "  1.  Password Safety\n" +
+                   "  2.  Phishing Awareness\n" +
+                   "  3.  Safe Browsing\n" +
+                   "  4.  Malware Protection\n" +
+                   "  5.  Two-Factor Authentication\n" +
+                   "  6.  Social Engineering\n" +
+                   "  7.  Public Wi-Fi Safety\n" +
+                   "  8.  Show menu again\n" +
+                   "────────────────────────────────\n" +
+                   "Type a number or keyword (e.g. password, scam, wifi).\n" +
                    "Type 'more' for extra details on the last topic.\n" +
                    "Type 'exit' to quit.";
         }

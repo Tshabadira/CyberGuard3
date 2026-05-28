@@ -1,31 +1,48 @@
-name: .NET Framework CI
+name: CyberGuard Build & Release
 
 on:
   push:
-    branches: ["master"]
+    branches: [ master ]
   pull_request:
-    branches: ["master"]
+    branches: [ master ]
 
 jobs:
   build:
+    name: Build & Package
     runs-on: windows-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      # 1 — Check out the code
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup NuGet
-      uses: NuGet/setup-nuget@v2
+      # 2 — Set up MSBuild (comes with Visual Studio on windows-latest)
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
 
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v2
+      # 3 — Restore NuGet packages (safe to run even if there are none)
+      - name: Restore NuGet packages
+        run: nuget restore CyberGuard.sln
 
+      # 4 — Build Release configuration
+      - name: Build solution (Release)
+        run: msbuild CyberGuard.sln /p:Configuration=Release /p:Platform="Any CPU" /t:Build /v:minimal
 
-    - name: Build
-      run: msbuild CyberGuard3/CyberGuard3.csproj /p:Configuration=Release
+      # 5 — Run a quick smoke-test: confirm the .exe was produced
+      - name: Verify build output
+        run: |
+          if (Test-Path "bin\Release\CyberGuard.exe") {
+            Write-Host "✅ CyberGuard.exe found — build succeeded."
+          } else {
+            Write-Error "❌ CyberGuard.exe not found — build failed."
+            exit 1
+          }
+        shell: pwsh
 
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: chatbot-release
-        path: CyberGuard3/bin/Release/
+      # 6 — Upload the Release folder as a downloadable artifact
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CyberGuard-Release
+          path: bin\Release\
+          retention-days: 30

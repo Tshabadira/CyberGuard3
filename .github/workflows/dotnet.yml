@@ -20,8 +20,6 @@ jobs:
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
 
-    - name: Restore packages
-      run: nuget restore CyberGuard3/CyberGuard3.csproj
 
     - name: Build
       run: msbuild CyberGuard3/CyberGuard3.csproj /p:Configuration=Release

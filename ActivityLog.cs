@@ -22,6 +22,22 @@ namespace CyberGuard
             return _log.ToList();
         }
 
+        public static string GetLogFormatted()
+        {
+            var log = GetLog();
+            if (log.Count == 0)
+                return "No actions recorded yet.";
+
+            string output = "// ACTIVITY LOG — Last 10 Actions\n";
+            output += "────────────────────────────────────────\n";
+            for (int i = 0; i < log.Count; i++)
+                output += $"  {i + 1}. {log[i]}\n";
+            output += "────────────────────────────────────────\n";
+            output += $"Total actions this session: {log.Count}\n";
+            output += "Type 'full log' to see complete history.";
+            return output;
+        }
+
         public static void Clear() => _log.Clear();
     }
 }

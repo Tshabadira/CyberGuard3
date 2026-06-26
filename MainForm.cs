@@ -6,6 +6,35 @@ namespace CyberGuard
 {
     public class MainForm : Form
     {
+        // ADD this field at the top of MainForm class:
+        private System.Windows.Forms.Timer _reminderTimer;
+
+        // ADD this method:
+        private void StartReminderChecker()
+        {
+            _reminderTimer = new System.Windows.Forms.Timer();
+            _reminderTimer.Interval = 60000; // check every 60 seconds
+            _reminderTimer.Tick += (s, e) => CheckReminders();
+            _reminderTimer.Start();
+        }
+
+        // ADD this method:
+        private void CheckReminders()
+        {
+            var tasks = _bot._taskManager.GetTasks(false);
+            foreach (var task in tasks)
+            {
+                if (task.ReminderDate.HasValue &&
+                    task.ReminderDate.Value <= DateTime.Now &&
+                    !task.IsCompleted)
+                {
+                    AppendBotMessage(
+                        $"⏰ REMINDER: '{task.Title}' is due now!\n" +
+                        $"Type 'complete task {task.Id}' when done.");
+                    ActivityLog.AddEntry($"Reminder fired for task: '{task.Title}'");
+                }
+            }
+        }
         private Chatbot _bot;
         private string _userName = "";
 

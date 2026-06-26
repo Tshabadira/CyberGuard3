@@ -128,12 +128,21 @@ namespace CyberGuard
                 return "No active quiz.";
 
             var q = _questions[_currentIndex];
-            string output = $"Q{_currentIndex + 1}. {q.Question}\n";
+
+            // Progress bar
+            int percent = (int)((double)_currentIndex / _questions.Count * 100);
+            string progress = $"[{'█'.ToString().PadRight(_currentIndex + 1, '█').PadRight(_questions.Count, '░')}] {percent}%";
+
+            string output = $"────────────────────────────────────────\n";
+            output += $"Question {_currentIndex + 1} of {_questions.Count}  {progress}\n";
+            output += $"Score so far: {_score}/{_currentIndex}\n";
+            output += $"────────────────────────────────────────\n";
+            output += $"{q.Question}\n\n";
+
             for (int i = 0; i < q.Options.Count; i++)
-            {
                 output += $"   {(char)('A' + i)}) {q.Options[i]}\n";
-            }
-            output += "Type your answer (A, B, C, D) or 'quit' to end the quiz.";
+
+            output += "\nType your answer (A, B, C, D) or 'quit' to end.";
             return output;
         }
 

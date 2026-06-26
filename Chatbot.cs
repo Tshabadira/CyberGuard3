@@ -15,7 +15,7 @@ namespace CyberGuard
         private readonly Random _random = new Random();
 
         // ── New components ────────────────────────────────
-        private readonly TaskManager _taskManager;
+        public readonly TaskManager _taskManager;
         private readonly QuizEngine _quizEngine;
         private bool _quizActive => _quizEngine.IsActive;
 
@@ -181,15 +181,36 @@ namespace CyberGuard
         };
 
         // ── Intent keywords (NLP simulation) ──────────────
-        private readonly Dictionary<string, List<string>> _intentKeywords = new Dictionary<string, List<string>>
+        // REPLACE your _intentKeywords with this expanded version:
+        private readonly Dictionary<string, List<string>> _intentKeywords =
+            new Dictionary<string, List<string>>
         {
-            { "add_task", new List<string> { "add task", "create task", "new task", "set task", "task add", "add a task" } },
-            { "reminder", new List<string> { "remind me", "set reminder", "create reminder", "remind", "add reminder" } },
-            { "show_tasks", new List<string> { "show tasks", "list tasks", "my tasks", "view tasks", "tasks" } },
-            { "delete_task", new List<string> { "delete task", "remove task", "clear task" } },
-            { "complete_task", new List<string> { "complete task", "mark done", "finish task" } },
-            { "start_quiz", new List<string> { "start quiz", "begin quiz", "play quiz", "quiz", "take quiz" } },
-            { "show_log", new List<string> { "show activity log", "activity log", "what have you done", "log", "history" } },
+    { "add_task", new List<string> {
+        "add task", "create task", "new task", "set task", "task add",
+        "add a task", "i need to", "don't let me forget", "make a note",
+        "note that", "remember to", "i should", "set me a task" }},
+    { "reminder", new List<string> {
+        "remind me", "set reminder", "create reminder", "remind",
+        "add reminder", "can you remind", "please remind",
+        "send me a reminder", "notify me" }},
+    { "show_tasks", new List<string> {
+        "show tasks", "list tasks", "my tasks", "view tasks", "tasks",
+        "what tasks", "pending tasks", "show my tasks", "all tasks" }},
+    { "delete_task", new List<string> {
+        "delete task", "remove task", "clear task",
+        "get rid of task", "cancel task" }},
+    { "complete_task", new List<string> {
+        "complete task", "mark done", "finish task",
+        "done with task", "completed task", "mark complete",
+        "i finished", "mark as done" }},
+    { "start_quiz", new List<string> {
+        "start quiz", "begin quiz", "play quiz", "quiz", "take quiz",
+        "test me", "test my knowledge", "cyber quiz",
+        "i want a quiz", "let's quiz" }},
+    { "show_log", new List<string> {
+        "show activity log", "activity log", "what have you done",
+        "log", "history", "recent actions", "show log",
+        "what happened", "show history" }},
         };
 
         // ── Constructor ────────────────────────────────────
@@ -250,6 +271,7 @@ namespace CyberGuard
                     return HandleAddTask(lower, sentiment);
                 case "show_tasks":
                     return HandleShowTasks();
+
                 case "delete_task":
                     return HandleDeleteTask(lower);
                 case "complete_task":
@@ -687,18 +709,33 @@ namespace CyberGuard
                 response += " Would you like to set a reminder? (type 'remind me' with a date)";
             return sentiment + response;
         }
-
         private string HandleShowTasks()
         {
             var tasks = _taskManager.GetTasks(false);
             if (tasks.Count == 0)
-                return "You have no pending tasks. Great job!";
-            string output = "Your pending cybersecurity tasks:\n";
+                return "You have no pending tasks. Great job staying on top of your cybersecurity!\n" +
+                       "Type 'add task - [description]' to create one.";
+
+            string output = "// YOUR PENDING CYBERSECURITY TASKS\n";
+            output += "────────────────────────────────────────\n";
             foreach (var t in tasks)
-                output += $"  [{t.Id}] {t.Title}" + (t.ReminderDate.HasValue ? $" (reminder: {t.ReminderDate.Value.ToShortDateString()})" : "") + "\n";
+            {
+                output += $"  [{t.Id}] {t.Title}";
+                if (t.ReminderDate.HasValue)
+                    output += $" (reminder: {t.ReminderDate.Value.ToShortDateString()})";
+                output += "\n";
+            }
+            output += "────────────────────────────────────────\n";
             output += "Type 'complete task [id]' or 'delete task [id]' to manage them.";
+
             ActivityLog.AddEntry("Viewed task list.");
             return output;
+        }
+
+        private string HandleShowLog()
+        {
+            ActivityLog.AddEntry("Viewed activity log.");
+            return ActivityLog.GetLogFormatted();
         }
 
         private string HandleDeleteTask(string input)
@@ -747,17 +784,7 @@ namespace CyberGuard
         }
 
         // ── Activity log handler ───────────────────────────
-        private string HandleShowLog()
-        {
-            var log = ActivityLog.GetLog();
-            if (log.Count == 0)
-                return "No actions logged yet.";
-            string output = "Recent activity log:\n";
-            for (int i = 0; i < log.Count; i++)
-                output += $"  {i + 1}. {log[i]}\n";
-            ActivityLog.AddEntry("Viewed activity log.");
-            return output;
-        }
+        
 
         // ── Random error responses ────────────────────────
         private string GetRandomError()

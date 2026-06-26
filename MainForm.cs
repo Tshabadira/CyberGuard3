@@ -36,7 +36,7 @@ namespace CyberGuard
 
         private void BuildUI()
         {
-            this.Text = "CyberGuard v2.0 — Cybersecurity Awareness Chatbot";
+            this.Text = "CyberGuard v3.0 — Cybersecurity Awareness Chatbot";
             this.Size = new Size(860, 640);
             this.MinimumSize = new Size(700, 520);
             this.StartPosition = FormStartPosition.CenterScreen;
@@ -61,7 +61,7 @@ namespace CyberGuard
             };
             Label lblTitle = new Label
             {
-                Text = "[ CyberGuard v2.0  —  Cybersecurity Awareness Chatbot ]",
+                Text = "[ CyberGuard v3.0  —  Cybersecurity Awareness Chatbot ]",
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.MiddleCenter,
                 ForeColor = Orange,
@@ -147,7 +147,7 @@ namespace CyberGuard
             };
             Label lblFooter = new Label
             {
-                Text = "  keywords: password · phishing · malware · scam · privacy · wifi · 2fa  |  type 'more' for extra tips  |  type 'exit' to quit",
+                Text = "  add task · view tasks · start quiz · activity log · password · phishing · scam · wifi · 2fa  |  type 'exit' to quit",
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.MiddleLeft,
                 ForeColor = MutedText,
@@ -238,14 +238,14 @@ namespace CyberGuard
             // ASCII banner
             AppendText("\n", GreenText, false);
             AppendText(
-"  ____        _                  ____                      _ \n" +
-" / ___|  _   | |__   ___ _ __  / ___|_   _  __ _ _ __ __| |\n" +
-"| |     | | | | '_ \\/ _ \\ '__| |  _| | | |/ _` | '__/ _` |\n" +
-"| |___  | |_| | |_) |  __/ |  | |_| | |_| | (_| | | | (_| |\n" +
-" \\____|  \\__, |_.__/ \\___|_|   \\____|\\__,_|\\__,_|_|  \\__,_|\n" +
-"         |___/\n",
+        "  ____        _                  ____                      _ \n" +
+        " / ___|  _   | |__   ___ _ __  / ___|_   _  __ _ _ __ __| |\n" +
+        "| |     | | | | '_ \\/ _ \\ '__| |  _| | | |/ _` | '__/ _` |\n" +
+        "| |___  | |_| | |_) |  __/ |  | |_| | |_| | (_| | | | (_| |\n" +
+        " \\____|  \\__, |_.__/ \\___|_|   \\____|\\__,_|\\__,_|_|  \\__,_|\n" +
+        "         |___/\n",
                 Orange, false);
-            AppendText("   >> CYBERSECURITY AWARENESS CHATBOT — GUI EDITION <<\n", OrangeDim, true);
+            AppendText("   >> CYBERSECURITY AWARENESS CHATBOT v3.0 <<\n", OrangeDim, true);
             AppendText("────────────────────────────────────────────────────────────\n\n",
                 Color.FromArgb(40, 40, 40), false);
 
@@ -278,13 +278,13 @@ namespace CyberGuard
 
         private void AppendBotMessage(string text)
         {
-            bool isError = text.StartsWith("[ERROR]");
-            string display = isError ? text.Substring(7).Trim() : text;
+            bool isError = text.StartsWith("[ERROR]") || text.StartsWith("I didn't") || text.StartsWith("Hmm") || text.StartsWith("Sorry") || text.StartsWith("I'm still");
+            string display = text.StartsWith("[ERROR]") ? text.Substring(7).Trim() : text;
 
             if (isError)
             {
                 AppendText("CyberGuard > ", Red, true);
-                AppendText("[ERROR] " + display + "\n\n", Red, false);
+                AppendText(display + "\n\n", Red, false);
             }
             else
             {

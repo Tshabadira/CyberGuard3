@@ -46,7 +46,7 @@ namespace CyberGuard
             };
             Label lblHeader = new Label
             {
-                Text = "[ CyberGuard v2.0  —  Enter your name to begin ]",
+                Text = "[ CyberGuard v3.0  —  Enter your name to begin ]",
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.MiddleCenter,
                 ForeColor = Orange,
